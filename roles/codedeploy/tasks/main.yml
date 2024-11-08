@@ -1,0 +1,17 @@
+---
+- name: Update package list and install Ruby
+  apt:
+    name: ruby
+    state: present
+    update_cache: yes
+
+- name: Download CodeDeploy install script
+  get_url:
+    url: https://aws-codedeploy-eu-west-2.s3.eu-west-2.amazonaws.com/latest/install
+    dest: /home/ubuntu/install
+    mode: '0755'
+
+- name: Run CodeDeploy install script
+  command: /home/ubuntu/install auto
+  args:
+    chdir: /home/ubuntu

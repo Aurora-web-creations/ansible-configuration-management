@@ -1,0 +1,70 @@
+---
+- name: Download .NET install script
+  get_url:
+    url: https://dot.net/v1/dotnet-install.sh
+    dest: /root/dotnet-install.sh
+    mode: '0755'
+
+- name: Install ICU package
+  apt:
+    name: libicu66
+    state: present
+    update_cache: yes
+
+- name: Run .NET install script
+  shell: ./dotnet-install.sh -v 3.1.422
+  args:
+    chdir: /root
+
+- name: Set DOTNET_SYSTEM_GLOBALIZATION_INVARIANT environment variable
+  shell: echo "export DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=true" >> /etc/environment
+
+- name: Move .NET installation to /usr/bin/dotnet
+  command: mv /root/.dotnet /usr/bin/dotnet
+
+- name: Set DOTNET_ROOT environment variable
+  shell: echo "export DOTNET_ROOT=/usr/bin/dotnet" >> /etc/environment
+
+- name: Add DOTNET_ROOT to system PATH
+  shell: echo "export PATH=$PATH:/usr/bin/dotnet" >> /etc/environment
+
+- name: Remove the .NET folder from /root
+  file:
+    path: /root/.dotnet
+    state: absent
+    force: yes
+
+- name: Create 'Content' directory for 'admin'
+  file:
+    path: /var/www/html/jleague/admin/Content/
+    state: directory
+    mode: '0666'
+
+- name: Create 'uploads' directory for 'admin'
+  file:
+    path: /var/www/html/jleague/admin/uploads/
+    state: directory
+    mode: '0666'
+
+- name: Create 'Content' directory for 'web'
+  file:
+    path: /var/www/html/jleague/web/Content/
+    state: directory
+    mode: '0666'
+
+- name: Create 'uploads' directory for 'web'
+  file:
+    path: /var/www/html/jleague/web/uploads/
+    state: directory
+    mode: '0666'
+
+- name: Copy backend service files to '{{ env  }}' server
+  copy:
+    src: "{{ item }}"
+    dest: "/etc/systemd/system/{{ item | basename }}"
+  with_fileglob:
+    - "{{ role_path }}/files/{{ env }}/*"
+
+- name: Reload systemd configuration
+  systemd:
+    daemon_reload: yes

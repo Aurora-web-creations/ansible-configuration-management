@@ -1,0 +1,17 @@
+---
+- name: Install Nginx
+  apt: 
+    name: nginx
+    state: latest
+
+- name: Copy nginx config files to '{{ env }}' server
+  template:
+    src: '{{ env }}/jleague.j2'
+    dest: /etc/nginx/conf.d/jleague.conf
+  vars:
+    server_name: "{{ env_urls[env] }}"
+
+- name: start nginx
+  service:
+    name: nginx
+    state: restarted

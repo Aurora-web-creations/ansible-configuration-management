@@ -1,0 +1,70 @@
+server {
+  server_name {{ server_name }};
+  access_log /var/www/html/access.log;
+  error_log /var/www/html/error.log;
+
+  client_max_body_size 2000M;
+
+  location / {
+    root /var/www/html/j-front-end-test/build;
+    try_files $uri $uri/ /index.html;
+  }
+
+  location /admin {
+    proxy_pass http://127.0.0.1:5000;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_connect_timeout 75s;
+    proxy_read_timeout 600s;
+    keepalive_timeout 0;
+    proxy_set_header Host $host;
+  }
+
+  location /api/evidence {
+    proxy_read_timeout 1800;
+  }
+
+  location /chat {
+    proxy_pass http://127.0.0.1:4000;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host $host;
+    proxy_cache_bypass $http_upgrade;
+  }
+
+  location = /api/version.json {
+    proxy_pass http://127.0.0.1:4000/version.json;
+  }
+
+  location ~ ^/(api|swagger|hangfire|Content|reports) {
+    proxy_pass http://127.0.0.1:4000;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_connect_timeout 75s;
+    proxy_read_timeout 600s;
+    keepalive_timeout 0;
+    proxy_set_header Host $host;
+  }
+
+  location /.well-known {
+    root /var/www/html/jleague/web;
+    try_files $uri =404;
+  }
+  
+  # Restrict access to sensitive files
+  location ~ /\.ht {
+    deny all;
+  }
+  
+  listen 80; # managed by Certbot
+
+  listen 443 ssl; # managed by Certbot
+  ssl_certificate /etc/letsencrypt/live/{{ server_name }}/fullchain.pem; # managed by Certbot
+  ssl_certificate_key /etc/letsencrypt/live/{{ server_name }}/privkey.pem; # managed by Certbot
+  include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+  ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+}

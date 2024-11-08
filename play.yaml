@@ -1,0 +1,27 @@
+---
+- name: Playbook to configure server
+  hosts: "{{ env }}"
+  become: true
+  vars_files:
+    - vars/main.yaml
+
+  tasks:
+    - name: Define allowed environments
+      set_fact:
+        allowed_envs: ["dev", "staging", "prod"]
+
+    - name: Fail if environment variable is invalid
+      fail:
+        msg: "The environment variable '{{ env }}' is not valid. Allowed values are: {{ allowed_envs | join(', ') }}"
+      when: env not in allowed_envs
+
+    - name: Verify environment variable
+      debug:
+        msg: "Environment is set to: {{ env }}"
+      when: env in allowed_envs
+
+  roles:
+    - { role: codedeploy }
+    - { role: letsencrypt, env: "{{env}}" }
+    - { role: nginx, env: "{{env}}" }
+    - { role: backend, env: "{{env}}" }

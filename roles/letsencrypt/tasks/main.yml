@@ -1,0 +1,23 @@
+---
+- name: Ensure apt is updated
+  become: yes
+  apt:
+    update_cache: yes
+
+- name: Install certbot and nginx plugin
+  become: yes
+  apt:
+    name:
+      - certbot
+      - python3-certbot-nginx
+    state: present
+
+- name: Obtain SSL certificate for '{{ env }}' env
+  become: yes
+  command: >
+    certbot certonly --nginx --non-interactive --agree-tos -d "{{ env_urls[env] }}" --email "{{ email }}"
+  register: certbot_result
+
+- name: Check for certificate issuance
+  debug:
+    var: certbot_result

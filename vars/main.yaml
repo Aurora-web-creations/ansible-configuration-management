@@ -1,0 +1,9 @@
+allowed_envs:
+  - dev
+  - staging
+  - prod
+
+env_urls:
+  dev: test.jamp.football
+  staging: staging.jamp.football
+  prod: jamp.football
